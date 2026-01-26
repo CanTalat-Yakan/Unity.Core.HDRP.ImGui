@@ -30,7 +30,7 @@ Install the Unity Essentials entry package via Unity's Package Manager, then ins
 
 This package is a small, practical bridge between **ImGui.NET** (Dear ImGui) and **HDRP**:
 - Rendering is performed through an **HDRP Custom Pass**.
-- Setup stays **manual and explicit** (no auto-created volumes, but bootstrapped imgui host objects for ease of use).
+- Setup stays **manual and explicit** (no auto-created volumes, but bootstrapped imgui host for ease of use).
 - Input is forwarded from Unity’s New Input System API into ImGui IO.
 
 ## Features
@@ -113,7 +113,6 @@ Every script that calls `ImGuiHost.Register` simply adds more UI to the same ImG
 - `Runtime/ImGuiCustomPass.cs` – HDRP Custom Pass that forwards rendering to the host
 - `Runtime/ImGuiRenderer.cs` – Draw data → mesh conversion and draw calls
 - `Runtime/ImGuiInput.cs` – Unity Input → ImGui IO
-- `Runtime/ImGuiTextureRegistry.cs` – `Texture` ↔ `TextureId` mapping
 - `Runtime/UnityEssentials.HDRPImGui.asmdef` – Runtime assembly definition
 
 ## Troubleshooting
