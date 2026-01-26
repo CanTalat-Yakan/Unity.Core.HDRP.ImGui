@@ -9,7 +9,6 @@ namespace UnityEssentials
     /// Referenced from an HDRP Custom Pass; rendering is performed by that Custom Pass via <see cref="Render"/>.
     /// This component auto-exists as a GlobalSingleton (no manual scene setup required).
     /// </summary>
-    [DisallowMultipleComponent]
     public sealed class ImGuiHost : GlobalSingleton<ImGuiHost>
     {
         public static bool ShowDemoWindow { get; set; } = true;
@@ -78,12 +77,13 @@ namespace UnityEssentials
             if (_context != IntPtr.Zero)
             {
                 try { ImGui.DestroyContext(_context); }
-                catch { /* ignore */ }
+                catch { }
                 _context = IntPtr.Zero;
             }
 
             _renderer.Dispose();
             ImGuiTextureRegistry.Clear();
+            ImGuiInput.Shutdown();
         }
 
         internal void Render(UnityEngine.Rendering.CommandBuffer cmd, Camera cam)

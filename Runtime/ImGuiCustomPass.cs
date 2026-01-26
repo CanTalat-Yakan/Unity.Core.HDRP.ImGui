@@ -10,19 +10,15 @@ namespace UnityEssentials
     [Serializable]
     internal sealed class ImGuiCustomPass : CustomPass
     {
-        /// <summary>
-        /// Scene reference. Assign this in the Custom Pass inspector.
-        /// </summary>
-        public ImGuiHost Host = ImGuiHost.Instance;
-
         protected override void Execute(CustomPassContext ctx)
         {
             var cam = ctx.hdCamera?.camera;
-            if (Host == null || cam == null)
+            var host = ImGuiHost.Instance;
+            if (host == null || cam == null)
                 return;
             
             CoreUtils.SetRenderTarget(ctx.cmd, ctx.cameraColorBuffer);
-            Host.Render(ctx.cmd, cam);
+            host.Render(ctx.cmd, cam);
         }
     }
 }

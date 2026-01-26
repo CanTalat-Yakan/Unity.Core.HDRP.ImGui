@@ -28,15 +28,11 @@ namespace UnityEssentials
         {
             if (_material == null)
             {
-                // Stick to built-in UI/Default (as requested).
                 var shader = Shader.Find("UI/Default");
                 _material = shader != null ? new Material(shader) : null;
 
-                // UI/Default expects a few keywords/states; keep material minimal.
                 if (_material != null)
-                {
                     _material.hideFlags = HideFlags.HideAndDontSave;
-                }
             }
 
             if (_mesh == null)

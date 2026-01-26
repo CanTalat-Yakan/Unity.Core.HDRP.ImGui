@@ -30,8 +30,8 @@ Install the Unity Essentials entry package via Unity's Package Manager, then ins
 
 This package is a small, practical bridge between **ImGui.NET** (Dear ImGui) and **HDRP**:
 - Rendering is performed through an **HDRP Custom Pass**.
-- Setup stays **manual and explicit** (no auto-created volumes, no bootstrap objects).
-- Input is forwarded from Unity's `Input` API into ImGui IO.
+- Setup stays **manual and explicit** (no auto-created volumes, but bootstrapped imgui host objects for ease of use).
+- Input is forwarded from Unity’s New Input System API into ImGui IO.
 
 ## Features
 - HDRP-native overlay rendering
@@ -39,7 +39,7 @@ This package is a small, practical bridge between **ImGui.NET** (Dear ImGui) and
 - Edit Mode + Play Mode
   - Useful for tooling/debug UI without entering Play Mode
 - Minimal integration surface
-  - A single host (`ImGuiHost`) and a single custom pass (`ImGuiCustomPass`)
+  - A single host (`ImGuiHost` autocreated) and a single custom pass (`ImGuiCustomPass`)
 
 ## Requirements
 - Unity 6000.0+
@@ -48,16 +48,13 @@ This package is a small, practical bridge between **ImGui.NET** (Dear ImGui) and
 
 ## Usage
 
-1) Add an `ImGuiHost`
-- Create an empty GameObject and add `UnityEssentials.ImGuiHost`.
-
-2) Add a Custom Pass Volume + `ImGuiCustomPass`
+Add a Custom Pass Volume + `ImGuiCustomPass`
 - Create a GameObject.
 - Add `Custom Pass Volume` (HDRP).
 - Set **Mode** to your preference (commonly *Global*).
 - Set the **Injection Point** to **After Post Process**.
   - This is very important for correct colors.
-- Add a custom pass of type `UnityEssentials.ImGuiCustomPass`.
+- Add the custom pass of type `ImGuiCustomPass`.
 
 That’s it.
 - It renders directly in Edit Mode and works in Play Mode too, as long as the volume is active for the camera.
@@ -110,11 +107,6 @@ Every script that calls `ImGuiHost.Register` simply adds more UI to the same ImG
 - Do not call `ImGui.NewFrame()` / `ImGui.Render()` in your callbacks (the host owns the frame).
 - Keep callbacks fast (they run every rendered frame).
 - If you need ordering, register/unregister in a controlled sequence (or introduce your own dispatcher).
-
-## Notes and Limitations
-- This is a minimal renderer. It does not implement every feature of the official ImGui backends.
-- Text input (IME, clipboard) and full key mapping are intentionally minimal; extend `ImGuiInput` as needed.
-- Docking is not set up.
 
 ## Files in This Package
 - `Runtime/ImGuiHost.cs` – ImGui context owner and frame driver
