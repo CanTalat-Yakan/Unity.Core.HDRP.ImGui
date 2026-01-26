@@ -1,26 +1,28 @@
+using System;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 
 namespace UnityEssentials
 {
     /// <summary>
-    /// Minimal HDRP <see cref="CustomPass"/> that forwards rendering to a referenced <see cref="ImguiHost"/>.
+    /// Minimal HDRP <see cref="CustomPass"/> that forwards rendering to a referenced <see cref="ImGuiHost"/>.
     /// </summary>
-    internal sealed class ImguiCustomPass : CustomPass
+    [Serializable]
+    internal sealed class ImGuiCustomPass : CustomPass
     {
         /// <summary>
         /// Scene reference. Assign this in the Custom Pass inspector.
         /// </summary>
-        public ImguiHost host;
+        public ImGuiHost Host = ImGuiHost.Instance;
 
         protected override void Execute(CustomPassContext ctx)
         {
             var cam = ctx.hdCamera?.camera;
-            if (host == null || cam == null)
+            if (Host == null || cam == null)
                 return;
-
+            
             CoreUtils.SetRenderTarget(ctx.cmd, ctx.cameraColorBuffer);
-            host.Render(ctx.cmd, cam);
+            Host.Render(ctx.cmd, cam);
         }
     }
 }

@@ -26,20 +26,20 @@ Install the Unity Essentials entry package via Unity's Package Manager, then ins
 
 # HDRP ImGui
 
-> Quick overview: Minimal Dear ImGui runtime rendering in HDRP via a Custom Pass.
+> Quick overview: Minimal ImGui.NET integration for HDRP that renders through a Custom Pass in Edit Mode and Play Mode, providing a minimalist immediate mode GUI library based on Dear ImGui and powered by the ImGui.NET runtime.
 
-A small runtime integration focused on clarity:
+This package is a small, practical bridge between **ImGui.NET** (Dear ImGui) and **HDRP**:
 - Rendering is performed through an **HDRP Custom Pass**.
-- Setup is **manual** (no auto-created volumes, no bootstraps).
+- Setup stays **manual and explicit** (no auto-created volumes, no bootstrap objects).
 - Input is forwarded from Unity's `Input` API into ImGui IO.
 
 ## Features
-- Manual-only setup
-  - No automatic scene objects; you wire up the host and Custom Pass yourself
-- Minimal render path
-  - Converts ImGui draw lists into a Unity mesh and draws it using a simple UI material
-- Minimal input forwarding
-  - Mouse + basic keyboard mapping for navigation and common shortcuts
+- HDRP-native overlay rendering
+  - Renders into the HDRP camera color buffer via Custom Pass
+- Edit Mode + Play Mode
+  - Useful for tooling/debug UI without entering Play Mode
+- Minimal integration surface
+  - A single host (`ImGuiHost`) and a single custom pass (`ImGuiCustomPass`)
 
 ## Requirements
 - Unity 6000.0+
@@ -48,62 +48,88 @@ A small runtime integration focused on clarity:
 
 ## Usage
 
-1) Add an `ImguiHost`
-- Create an empty GameObject and add `UnityEssentials.ImguiHost`.
-- Assign **Target Camera** (the same camera HDRP renders through).
+1) Add an `ImGuiHost`
+- Create an empty GameObject and add `UnityEssentials.ImGuiHost`.
 
-2) Add a Custom Pass Volume
+2) Add a Custom Pass Volume + `ImGuiCustomPass`
 - Create a GameObject.
 - Add `Custom Pass Volume` (HDRP).
 - Set **Mode** to your preference (commonly *Global*).
-- Add a custom pass of type `UnityEssentials.ImguiCustomPass`.
-- In `ImguiCustomPass`, assign the **Host** reference to your `ImguiHost` component.
+- Set the **Injection Point** to **After Post Process**.
+  - This is very important for correct colors.
+- Add a custom pass of type `UnityEssentials.ImGuiCustomPass`.
 
-3) Enter Play Mode
-- You should see the sample ImGui window.
-- You should be able to hover and interact.
+That’s it.
+- It renders directly in Edit Mode and works in Play Mode too, as long as the volume is active for the camera.
 
-### How to add your own UI
+## How it works
 
-`ImguiHost.Render(...)` is invoked by HDRP and is responsible for:
+`ImGuiHost.Render(...)` is invoked by HDRP every frame and is responsible for:
 - updating IO (`DisplaySize`, `DeltaTime`, input events)
-- calling `ImGui.NewFrame()` / building UI
+- calling `ImGui.NewFrame()`
+- executing registered UI callbacks
 - calling `ImGui.Render()` and submitting draw data
 
-To add your own UI, replace the example window in `ImguiHost.Render` with your own ImGui calls.
+### Sample
 
-## Native plugins (cimgui)
+All ImGui UI is drawn by registering a draw callback on the global `ImGuiHost`.
+Any number of scripts can register; they all contribute windows to the same frame.
 
-This project uses platform-specific native libraries. Unity must see **exactly one** editor-compatible `cimgui` per platform.
+```csharp
+using ImGuiNET;
+using UnityEngine;
+using UnityEssentials;
 
-Recommended layout (example):
-- Windows x64: `.../runtimes/win-x64/native/cimgui.dll`
-- Linux x64: `.../runtimes/linux-x64/native/libcimgui.so`
-- macOS x64/arm64: `.../runtimes/osx-*/native/libcimgui.dylib`
+public sealed class ImGuiExampleUi : MonoBehaviour
+{
+    private void OnEnable() => ImGuiHost.Register(Draw);
+    private void OnDisable() => ImGuiHost.Unregister(Draw);
+
+    private static void Draw()
+    {
+        // Main tool window
+        ImGui.Begin("Main Tool");
+        ImGui.Text("This is the primary ImGui window.");
+        ImGui.End();
+
+        // Secondary window
+        ImGui.Begin("Stats");
+        var fps = 1f / Mathf.Max(Time.unscaledDeltaTime, 0.0001f);
+        ImGui.Text($"FPS: {fps:0}");
+        ImGui.End();
+
+        // Any number of additional windows can be added here
+        ImGui.ShowDemoWindow();
+    }
+}
+```
+
+Every script that calls `ImGuiHost.Register` simply adds more UI to the same ImGui frame. No special root object or manual scene wiring is required.
+
+### Rules of thumb
+- Do not call `ImGui.NewFrame()` / `ImGui.Render()` in your callbacks (the host owns the frame).
+- Keep callbacks fast (they run every rendered frame).
+- If you need ordering, register/unregister in a controlled sequence (or introduce your own dispatcher).
 
 ## Notes and Limitations
 - This is a minimal renderer. It does not implement every feature of the official ImGui backends.
-- The default material uses `UI/Default` (fallback `Unlit/Transparent`). If you need HDRP-specific blending or SRP batching behavior, provide a dedicated shader/material.
-- Text input (IME, clipboard) and full key mapping are intentionally minimal; extend `ImguiInput` as needed.
-- Multi-viewport / docking are not set up.
+- Text input (IME, clipboard) and full key mapping are intentionally minimal; extend `ImGuiInput` as needed.
+- Docking is not set up.
 
 ## Files in This Package
-- `Runtime/ImguiHost.cs` – ImGui context owner and example window
-- `Runtime/ImguiCustomPass.cs` – HDRP Custom Pass that forwards rendering to the host
-- `Runtime/ImguiRenderer.cs` – Draw data → mesh conversion and draw calls
-- `Runtime/ImguiInput.cs` – Unity Input → ImGui IO
-- `Runtime/ImguiTextureRegistry.cs` – `Texture` ↔ `TextureId` mapping
-- `Runtime/UnityEssentials.Imgui.asmdef` – Runtime assembly definition
+- `Runtime/ImGuiHost.cs` – ImGui context owner and frame driver
+- `Runtime/ImGuiCustomPass.cs` – HDRP Custom Pass that forwards rendering to the host
+- `Runtime/ImGuiRenderer.cs` – Draw data → mesh conversion and draw calls
+- `Runtime/ImGuiInput.cs` – Unity Input → ImGui IO
+- `Runtime/ImGuiTextureRegistry.cs` – `Texture` ↔ `TextureId` mapping
+- `Runtime/UnityEssentials.HDRPImGui.asmdef` – Runtime assembly definition
 
 ## Troubleshooting
 - **Nothing renders:**
   - Ensure the Custom Pass Volume is active for the camera and the pass is added.
-  - Ensure `ImguiCustomPass.host` references an enabled `ImguiHost`.
-  - Ensure `ImguiHost.Target Camera` matches the camera passed by HDRP.
 
-- **Plugin load errors:**
-  - Ensure exactly one native `cimgui` plugin is Editor-compatible for your OS.
-  - Ensure the plugin CPU/OS settings match your Editor (Linux/Windows/macOS).
+- **Wrong colors / looks washed out:**
+  - Ensure the Custom Pass injection point is **After Post Process**.
 
 ## Tags
-unity, imgui, dear-imgui, hdrp, custom-pass, runtime, overlay, input
+unity, imgui, dear-imgui, hdrp, custom-pass, runtime, overlay, tooling
