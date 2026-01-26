@@ -21,7 +21,6 @@ namespace UnityEssentials
         private Vector2[] _uvs;
         private int[] _indices;
 
-        // Cached once; reduces per-frame work
         private static readonly Vector4 s_identityScaleOffset = new(1, 1, 0, 0);
 
         public void EnsureResources()
@@ -110,8 +109,8 @@ namespace UnityEssentials
 
                     _positions[vtxOffset + v] = new Vector3(iv.pos.X, iv.pos.Y, 0f);
                     _uvs[vtxOffset + v] = new Vector2(iv.uv.X, iv.uv.Y);
-
-                    // Keep your "linear hack" as requested.
+                    
+                    // Pre-convert colors to linear space to compensate for HDRP-specific color handling in the UI/Default shader.
                     var c = iv.col;
                     var col32 = new Color32(
                         (byte)(c & 0xFF),

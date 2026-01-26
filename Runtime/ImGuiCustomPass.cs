@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 
@@ -16,7 +17,10 @@ namespace UnityEssentials
             var host = ImGuiHost.Instance;
             if (host == null || cam == null)
                 return;
-            
+
+            if (cam.cameraType == CameraType.SceneView)
+                return;
+
             CoreUtils.SetRenderTarget(ctx.cmd, ctx.cameraColorBuffer);
             host.Render(ctx.cmd, cam);
         }
