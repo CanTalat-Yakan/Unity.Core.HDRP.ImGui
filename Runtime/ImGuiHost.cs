@@ -41,7 +41,7 @@ namespace UnityEssentials
         private IntPtr _context;
         private float _lastTime;
         private readonly ImGuiRenderer _renderer = new();
-        private static event Action? s_afterNewFrame;
+        private static event Action s_afterNewFrame;
 
         private void OnEnable() => 
             EnsureInitialized();

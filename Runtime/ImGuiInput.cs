@@ -15,7 +15,7 @@ namespace UnityEssentials
     internal static class ImGuiInput
     {
         private static bool s_initialized;
-        private static Action<char>? s_textInputHandler;
+        private static Action<char> s_textInputHandler;
 
         public static void Initialize(ImGuiIOPtr io)
         {
