@@ -1,20 +1,20 @@
 {
-  "name": "com.unityessentials.hdrpimgui",
-  "version": "1.0.0",
-  "displayName": "UnityEssentials HDRP ImGui",
+  "name": "com.unityessentials.core.hdrp.imgui",
+  "version": "2.0.0",
+  "displayName": "Core HDRP ImGui",
   "description": "This is a part of the UnityEssentials Ecosystem",
   "unity": "6000.0",
-  "unityRelease": null,
+  "unityRelease": "",
   "dependencies": {},
   "keywords": [],
   "author": {
     "name": "Unity Essentials",
-    "email": null,
-    "url": null
+    "email": "",
+    "url": ""
   },
-  "documentationUrl": null,
-  "changelogUrl": null,
-  "licensesUrl": null,
+  "documentationUrl": "",
+  "changelogUrl": "",
+  "licensesUrl": "",
   "samples": [],
   "hideInEditor": true
 }
