@@ -19,10 +19,10 @@ namespace UnityEssentials
             var host = ImGuiHost.Instance;
             if (host == null || cam == null)
                 return;
-
+            
             if (cam.cameraType == CameraType.SceneView)
                 return;
-
+            
             ImGuiHost.ShowDemoWindow = ShowDemoWindow;
             CoreUtils.SetRenderTarget(ctx.cmd, ctx.cameraColorBuffer);
             host.Render(ctx.cmd, cam);

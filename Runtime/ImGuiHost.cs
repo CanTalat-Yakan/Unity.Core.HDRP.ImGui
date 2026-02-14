@@ -13,35 +13,9 @@ namespace UnityEssentials
     {
         public static bool ShowDemoWindow { get; set; } = true;
         
-        /// <summary>
-        /// Convenience API to register a callback and automatically ensure the host exists.
-        /// Invoked after <c>ImGui.NewFrame()</c> and before <c>ImGui.Render()</c>.
-        /// </summary>
-        /// <remarks>
-        /// Keep handlers fast (this runs every frame).
-        /// Handlers should not call <c>ImGui.NewFrame()</c> / <c>ImGui.Render()</c>.
-        /// Exceptions are caught so one bad handler won't break rendering.
-        /// </remarks>
-        public static void Register(Action callback)
-        {
-            if (callback == null) throw new ArgumentNullException(nameof(callback));
-            _ = Instance; // Ensure GlobalSingleton exists.
-            s_afterNewFrame += callback;
-        }
-
-        /// <summary>
-        /// Convenience API to unregister a previously registered callback.
-        /// </summary>
-        public static void Unregister(Action callback)
-        {
-            if (callback == null) throw new ArgumentNullException(nameof(callback));
-            s_afterNewFrame -= callback;
-        }
-
         private IntPtr _context;
         private float _lastTime;
         private readonly ImGuiRenderer _renderer = new();
-        private static event Action s_afterNewFrame;
 
         private void OnEnable() => 
             EnsureInitialized();
@@ -68,8 +42,16 @@ namespace UnityEssentials
             io.Fonts.AddFontDefault();
             io.Fonts.Build();
 
+            io.DeltaTime = Mathf.Max(0.0001f, Time.realtimeSinceStartup - _lastTime);
+            _lastTime = Time.realtimeSinceStartup;
+            io.DisplaySize = new System.Numerics.Vector2(1920, 1080);
+            
+            ImGuiInput.UpdateIo(io);
+            
             _renderer.EnsureResources();
             _lastTime = Time.realtimeSinceStartup;
+            
+            ImGui.NewFrame();
         }
 
         private void Shutdown()
@@ -101,17 +83,14 @@ namespace UnityEssentials
             io.DisplaySize = new System.Numerics.Vector2(cam.pixelWidth, cam.pixelHeight);
 
             ImGuiInput.UpdateIo(io);
-
-            ImGui.NewFrame();
-            
-            try { s_afterNewFrame?.Invoke(); } 
-            catch (Exception) { }
             
             if(ShowDemoWindow)
                 ImGui.ShowDemoWindow();
 
             ImGui.Render();
             _renderer.RenderDrawData(ImGui.GetDrawData(), cmd);
+            
+            ImGui.NewFrame();
         }
     }
 }
