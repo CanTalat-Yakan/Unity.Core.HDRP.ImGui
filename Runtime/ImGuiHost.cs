@@ -12,12 +12,12 @@ namespace UnityEssentials
     public sealed class ImGuiHost : GlobalSingleton<ImGuiHost>
     {
         public static bool ShowDemoWindow { get; set; } = true;
-        
+
         private IntPtr _context;
         private float _lastTime;
         private readonly ImGuiRenderer _renderer = new();
 
-        private void OnEnable() => 
+        private void OnEnable() =>
             EnsureInitialized();
 
         private void OnDisable() =>
@@ -45,12 +45,12 @@ namespace UnityEssentials
             io.DeltaTime = Mathf.Max(0.0001f, Time.realtimeSinceStartup - _lastTime);
             _lastTime = Time.realtimeSinceStartup;
             io.DisplaySize = new System.Numerics.Vector2(1920, 1080);
-            
+
             ImGuiInput.UpdateIo(io);
-            
+
             _renderer.EnsureResources();
             _lastTime = Time.realtimeSinceStartup;
-            
+
             ImGui.NewFrame();
         }
 
@@ -58,8 +58,14 @@ namespace UnityEssentials
         {
             if (_context != IntPtr.Zero)
             {
-                try { ImGui.DestroyContext(_context); }
-                catch { }
+                try
+                {
+                    ImGui.DestroyContext(_context);
+                }
+                catch
+                {
+                }
+
                 _context = IntPtr.Zero;
             }
 
@@ -70,27 +76,33 @@ namespace UnityEssentials
 
         internal void Render(UnityEngine.Rendering.CommandBuffer cmd, Camera cam)
         {
-            EnsureInitialized();
+            try
+            {
+                EnsureInitialized();
 
-            if (_context == IntPtr.Zero)
-                return;
+                if (_context == IntPtr.Zero)
+                    return;
 
-            ImGui.SetCurrentContext(_context);
+                ImGui.SetCurrentContext(_context);
 
-            var io = ImGui.GetIO();
-            io.DeltaTime = Mathf.Max(0.0001f, Time.realtimeSinceStartup - _lastTime);
-            _lastTime = Time.realtimeSinceStartup;
-            io.DisplaySize = new System.Numerics.Vector2(cam.pixelWidth, cam.pixelHeight);
+                var io = ImGui.GetIO();
+                io.DeltaTime = Mathf.Max(0.0001f, Time.realtimeSinceStartup - _lastTime);
+                _lastTime = Time.realtimeSinceStartup;
+                io.DisplaySize = new System.Numerics.Vector2(cam.pixelWidth, cam.pixelHeight);
 
-            ImGuiInput.UpdateIo(io);
-            
-            if(ShowDemoWindow)
-                ImGui.ShowDemoWindow();
+                ImGuiInput.UpdateIo(io);
 
-            ImGui.Render();
-            _renderer.RenderDrawData(ImGui.GetDrawData(), cmd);
-            
-            ImGui.NewFrame();
+                if (ShowDemoWindow)
+                    ImGui.ShowDemoWindow();
+
+                ImGui.Render();
+                _renderer.RenderDrawData(ImGui.GetDrawData(), cmd);
+
+                ImGui.NewFrame();
+            }
+            catch
+            {
+            }
         }
     }
 }
