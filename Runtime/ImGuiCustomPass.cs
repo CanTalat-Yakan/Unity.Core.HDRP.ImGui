@@ -1,4 +1,5 @@
 using System;
+using ImGuiNET;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
@@ -11,6 +12,8 @@ namespace UnityEssentials
     [Serializable]
     internal sealed class ImGuiCustomPass : CustomPass
     {
+        public bool ShowDemoWindow = true;
+        
         protected override void Execute(CustomPassContext ctx)
         {
             var cam = ctx.hdCamera?.camera;
@@ -20,6 +23,9 @@ namespace UnityEssentials
             
             if (cam.cameraType == CameraType.SceneView)
                 return;
+
+            if(ShowDemoWindow)
+                ImGui.ShowDemoWindow();
             
             CoreUtils.SetRenderTarget(ctx.cmd, ctx.cameraColorBuffer);
             host.Render(ctx.cmd, cam);

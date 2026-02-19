@@ -31,7 +31,6 @@ namespace UnityEssentials
 
         public void Dispose()
         {
-            // No-op.
         }
     }
 }

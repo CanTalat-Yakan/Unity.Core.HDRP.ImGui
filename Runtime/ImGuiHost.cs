@@ -11,8 +11,6 @@ namespace UnityEssentials
     /// </summary>
     public sealed class ImGuiHost : GlobalSingleton<ImGuiHost>
     {
-        public static bool ShowDemoWindow { get; set; } = true;
-
         private IntPtr _context;
         private float _lastTime;
         private readonly ImGuiRenderer _renderer = new();
@@ -58,13 +56,8 @@ namespace UnityEssentials
         {
             if (_context != IntPtr.Zero)
             {
-                try
-                {
-                    ImGui.DestroyContext(_context);
-                }
-                catch
-                {
-                }
+                try { ImGui.DestroyContext(_context); }
+                catch { }
 
                 _context = IntPtr.Zero;
             }
@@ -92,17 +85,12 @@ namespace UnityEssentials
 
                 ImGuiInput.UpdateIo(io);
 
-                if (ShowDemoWindow)
-                    ImGui.ShowDemoWindow();
-
                 ImGui.Render();
                 _renderer.RenderDrawData(ImGui.GetDrawData(), cmd);
 
                 ImGui.NewFrame();
             }
-            catch
-            {
-            }
+            catch { }
         }
     }
 }
