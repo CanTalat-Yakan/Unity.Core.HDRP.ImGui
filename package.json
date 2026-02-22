@@ -1,6 +1,6 @@
 {
   "name": "com.unityessentials.core.hdrp.imgui",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "displayName": "Core HDRP ImGui",
   "description": "This is a part of the UnityEssentials Ecosystem",
   "unity": "6000.0",
@@ -9,7 +9,6 @@
     "com.unity.inputsystem": "~1.18.0",
     "com.unity.render-pipelines.core": "~17.4.0",
     "com.unity.render-pipelines.high-definition": "~17.4.0",
-    "com.unityessentials.editor.attributes.readonly": "~2.0.0",
     "com.unityessentials.systems.singleton": "~2.0.0"
   },
   "keywords": [],
