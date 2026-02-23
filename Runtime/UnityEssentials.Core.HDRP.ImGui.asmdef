@@ -1,5 +1,5 @@
 {
-    "name": "UnityEssentials.HDRPImGui",
+    "name": "UnityEssentials.Core.HDRP.ImGui",
     "rootNamespace": "UnityEssentials",
     "references": [
         "GUID:75469ad4d38634e559750d17036d5f7c",
