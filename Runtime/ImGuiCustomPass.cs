@@ -9,7 +9,7 @@ namespace UnityEssentials
     [Serializable]
     internal sealed class ImGuiCustomPass : CustomPass
     {
-        public bool ShowDemoWindow = true;
+        public bool ShowDemoWindow = false;
 
         protected override void Execute(CustomPassContext ctx)
         {
@@ -21,9 +21,13 @@ namespace UnityEssentials
 
             if (cam.cameraType == CameraType.SceneView)
                 return;
-
-            if (ShowDemoWindow)
-                ImGui.ShowDemoWindow();
+            
+            try
+            {
+                if (ShowDemoWindow)
+                    ImGui.ShowDemoWindow();
+            }
+            catch { }
 
             CoreUtils.SetRenderTarget(ctx.cmd, ctx.cameraColorBuffer);
             host.Render(ctx.cmd, cam);

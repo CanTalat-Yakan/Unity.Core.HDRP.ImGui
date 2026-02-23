@@ -76,6 +76,10 @@ namespace UnityEssentials
                 if (_context == IntPtr.Zero)
                     return;
 
+                using var scope = ImGuiScope.TryEnter();
+                if (!scope.Active)
+                    return;
+
                 ImGui.SetCurrentContext(_context);
 
                 var io = ImGui.GetIO();
