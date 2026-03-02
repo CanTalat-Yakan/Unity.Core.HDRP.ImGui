@@ -11,9 +11,56 @@ namespace UnityEssentials
     /// </summary>
     public sealed class ImGuiHost : GlobalSingleton<ImGuiHost>
     {
+        internal static IntPtr KnownContext { get; private set; }
+
+#if UNITY_EDITOR
+        private static bool s_editorBlocked;
+#endif
+
         private IntPtr _context;
         private float _lastTime;
         private readonly ImGuiRenderer _renderer = new();
+
+        internal bool ShowDemoWindow { get; set; }
+
+        private bool _shuttingDown;
+
+        internal static bool IsBlockedForSafety
+        {
+            get
+            {
+                if (GlobalSingletonRegistrar.IsDestroyingAll)
+                    return true;
+
+#if UNITY_EDITOR
+                if (s_editorBlocked)
+                    return true;
+#endif
+
+                return false;
+            }
+        }
+
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+        private static void EditorInit()
+        {
+            UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        }
+
+        private static void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange state)
+        {
+            // Block native calls while Unity is transitioning playmode.
+            if (state == UnityEditor.PlayModeStateChange.ExitingEditMode ||
+                state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+                s_editorBlocked = true;
+
+            if (state == UnityEditor.PlayModeStateChange.EnteredEditMode ||
+                state == UnityEditor.PlayModeStateChange.EnteredPlayMode)
+                s_editorBlocked = false;
+        }
+#endif
 
         private void OnEnable() =>
             EnsureInitialized();
@@ -29,10 +76,14 @@ namespace UnityEssentials
 
         private void EnsureInitialized()
         {
+            if (IsBlockedForSafety)
+                return;
+
             if (_context != IntPtr.Zero)
                 return;
 
             _context = ImGui.CreateContext();
+            KnownContext = _context;
             ImGui.SetCurrentContext(_context);
 
             var io = ImGui.GetIO();
@@ -54,21 +105,40 @@ namespace UnityEssentials
 
         private void Shutdown()
         {
-            if (_context != IntPtr.Zero)
+            _shuttingDown = true;
+
+            KnownContext = IntPtr.Zero;
+
+            var ctx = _context;
+            _context = IntPtr.Zero;
+
+            // During playmode transitions (and while global singletons are being destroyed), calling into
+            // native plugins can be unsafe on some devices/editors. Prefer leaking the context rather than
+            // crashing the editor.
+            if (ctx != IntPtr.Zero && !IsBlockedForSafety)
             {
-                try { ImGui.DestroyContext(_context); }
+                try { ImGui.SetCurrentContext(IntPtr.Zero); }
                 catch { }
 
-                _context = IntPtr.Zero;
+                try { ImGui.DestroyContext(ctx); }
+                catch { }
             }
 
             _renderer.Dispose();
             ImGuiTextureRegistry.Clear();
             ImGuiInput.Shutdown();
+
+            _shuttingDown = false;
         }
 
         internal void Render(UnityEngine.Rendering.CommandBuffer cmd, Camera cam)
         {
+            if (IsBlockedForSafety)
+                return;
+
+            if (_shuttingDown)
+                return;
+
             try
             {
                 EnsureInitialized();
@@ -76,11 +146,19 @@ namespace UnityEssentials
                 if (_context == IntPtr.Zero)
                     return;
 
+                ImGui.SetCurrentContext(_context);
+
                 using var scope = ImGuiScope.TryEnter();
                 if (!scope.Active)
                     return;
 
-                ImGui.SetCurrentContext(_context);
+                // If requested by the Custom Pass, draw the demo window inside the host-owned context.
+                // (Avoids calling ImGui from the Custom Pass when context may be stale.)
+                if (ShowDemoWindow)
+                {
+                    try { ImGui.ShowDemoWindow(); }
+                    catch { }
+                }
 
                 var io = ImGui.GetIO();
                 io.DeltaTime = Mathf.Max(0.0001f, Time.realtimeSinceStartup - _lastTime);

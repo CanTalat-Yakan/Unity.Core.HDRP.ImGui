@@ -18,10 +18,26 @@ namespace UnityEssentials
 
         public static ImGuiScope TryEnter()
         {
+            // Avoid calling into ImGui at all during playmode transitions / singleton teardown.
+            if (ImGuiHost.IsBlockedForSafety)
+                return new ImGuiScope(active: false);
+
+            var known = ImGuiHost.KnownContext;
+            if (known == IntPtr.Zero)
+                return new ImGuiScope(active: false);
+
             try
             {
                 var ctx = ImGui.GetCurrentContext();
-                return new ImGuiScope(active: ctx != IntPtr.Zero);
+                if (ctx == IntPtr.Zero)
+                    return new ImGuiScope(active: false);
+
+                // Require the current context to match the host-owned context.
+                // This prevents drawing into a stale/dangling context pointer.
+                if (ctx != known)
+                    return new ImGuiScope(active: false);
+
+                return new ImGuiScope(active: true);
             }
             catch
             {

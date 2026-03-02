@@ -1,5 +1,4 @@
 using System;
-using ImGuiNET;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
@@ -14,6 +13,9 @@ namespace UnityEssentials
         protected override void Execute(CustomPassContext ctx)
         {
             var cam = ctx.hdCamera?.camera;
+            if (ImGuiHost.IsBlockedForSafety)
+                return;
+
             var host = ImGuiHost.Instance;
 
             if (host == null || cam == null)
@@ -21,13 +23,8 @@ namespace UnityEssentials
 
             if (cam.cameraType == CameraType.SceneView)
                 return;
-            
-            try
-            {
-                if (ShowDemoWindow)
-                    ImGui.ShowDemoWindow();
-            }
-            catch { }
+
+            host.ShowDemoWindow = ShowDemoWindow;
 
             CoreUtils.SetRenderTarget(ctx.cmd, ctx.cameraColorBuffer);
             host.Render(ctx.cmd, cam);
