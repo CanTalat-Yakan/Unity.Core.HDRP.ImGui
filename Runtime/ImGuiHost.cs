@@ -101,6 +101,8 @@ namespace UnityEssentials
             _lastTime = Time.realtimeSinceStartup;
 
             ImGui.NewFrame();
+
+            AssetResolver.InstantiatePrefab("UnityEssentials_Prefab_ImGuiPass", parent: transform);
         }
 
         private void Shutdown()
@@ -141,8 +143,6 @@ namespace UnityEssentials
 
             try
             {
-                EnsureInitialized();
-
                 if (_context == IntPtr.Zero)
                     return;
 
