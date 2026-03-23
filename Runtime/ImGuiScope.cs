@@ -1,5 +1,6 @@
 using System;
 using ImGuiNET;
+using ImGuizmoNET;
 
 namespace UnityEssentials
 {

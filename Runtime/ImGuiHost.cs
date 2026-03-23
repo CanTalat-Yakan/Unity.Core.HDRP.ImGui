@@ -1,6 +1,5 @@
 using System;
 using ImGuiNET;
-using ImGuizmoNET;
 using UnityEngine;
 
 namespace UnityEssentials
@@ -172,16 +171,6 @@ namespace UnityEssentials
                 _renderer.RenderDrawData(ImGui.GetDrawData(), cmd);
 
                 ImGui.NewFrame();
-
-                var ctx = ImGui.GetCurrentContext();
-                if (ctx != IntPtr.Zero)
-                    ImGuizmo.SetImGuiContext(ctx);
-                ImGuizmo.BeginFrame();
-                ImGuizmo.SetDrawlist(ImGui.GetForegroundDrawList());
-                ImGuizmo.SetOrthographic(cam.orthographic);
-                ImGuiUtilities.GetDisplaySize(out var imguizmoW, out var imguizmoH);
-                ImGuizmo.SetRect(0f, 0f, imguizmoW, imguizmoH);
-                ImGuizmo.Enable(true);
             }
             catch { }
         }
